@@ -240,19 +240,19 @@ SELECT
     ps.sale_total_price
 FROM pet_sales ps
 JOIN dim_customer dc ON
-    ps.customer_first_name = dc.first_name AND
-    ps.customer_last_name = dc.last_name AND
-    ps.customer_email = dc.email
+    TRIM(ps.customer_first_name) = TRIM(dc.first_name) AND
+    TRIM(ps.customer_last_name) = TRIM(dc.last_name) AND
+    TRIM(ps.customer_email) = TRIM(dc.email)
 JOIN dim_seller ds ON
-    ps.seller_first_name = ds.first_name AND
-    ps.seller_last_name = ds.last_name AND
-    ps.seller_email = ds.email
+    TRIM(ps.seller_first_name) = TRIM(ds.first_name) AND
+    TRIM(ps.seller_last_name) = TRIM(ds.last_name) AND
+    TRIM(ps.seller_email) = TRIM(ds.email)
 JOIN dim_store dst ON
-    ps.store_name = dst.name AND
-    ps.store_email = dst.email
+    TRIM(ps.store_name) = TRIM(dst.name) AND
+    TRIM(ps.store_email) = TRIM(dst.email)
 JOIN dim_product dp ON
-    ps.product_name = dp.name AND
-    ps.product_price = dp.price
+    TRIM(ps.product_name) = TRIM(dp.name) AND
+    ROUND(ps.product_price::NUMERIC, 2) = ROUND(dp.price::NUMERIC, 2)
 JOIN dim_supplier dsu ON
-    ps.supplier_name = dsu.name AND
-    ps.supplier_email = dsu.email;
+    TRIM(ps.supplier_name) = TRIM(dsu.name) AND
+    TRIM(ps.supplier_email) = TRIM(dsu.email);
