@@ -15,6 +15,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d
       - ./datacsv:/csvdata  
+      - ./snowflake:/snowflake
 
 volumes:
   postgres_data:
