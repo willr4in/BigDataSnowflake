@@ -1,61 +1,67 @@
+-- Загрузка уникальных покупателей
 INSERT INTO dim_customer (
-    first_name, last_name, age, email, country, postal_code,
-    pet_type, pet_name, pet_breed, pet_category
+    cust_fname, cust_lname, cust_age, cust_email,
+    cust_country, cust_zip, pet_type, pet_name, pet_breed, pet_group
 )
 SELECT DISTINCT
-    customer_first_name, customer_last_name, customer_age, customer_email,
-    customer_country, customer_postal_code, customer_pet_type,
-    customer_pet_name, customer_pet_breed, pet_category
-FROM pet_sales;
+    buyer_fname, buyer_lname, buyer_age, buyer_email,
+    buyer_country, buyer_zip, animal_type, animal_name,
+    animal_breed, pet_group
+FROM pet_sales_raw;
 
+-- Загрузка уникальных продавцов
 INSERT INTO dim_seller (
-    first_name, last_name, email, country, postal_code
+    agent_fname, agent_lname, agent_email, agent_country, agent_zip
 )
 SELECT DISTINCT
-    seller_first_name, seller_last_name, seller_email,
-    seller_country, seller_postal_code
-FROM pet_sales;
+    seller_fname, seller_lname, seller_email,
+    seller_country, seller_zip
+FROM pet_sales_raw;
 
+-- Загрузка уникальных магазинов
 INSERT INTO dim_store (
-    name, location, city, state, country, phone, email
+    shop_name, shop_address, shop_city, shop_region,
+    shop_country, shop_phone, shop_email
 )
 SELECT DISTINCT
-    store_name, store_location, store_city, store_state,
-    store_country, store_phone, store_email
-FROM pet_sales;
+    store_title, store_addr, store_city, store_region,
+    store_country, store_tel, store_mail
+FROM pet_sales_raw;
 
+-- Загрузка уникальных продуктов
 INSERT INTO dim_product (
-    name, category, weight, color, size, brand,
-    material, description, rating, reviews,
-    release_date, expiry_date, price
+    item_name, item_category, item_weight, item_color,
+    item_size, item_brand, item_material, item_description,
+    item_rating, item_reviews, item_launch_date,
+    item_expiry_date, item_price
 )
 SELECT DISTINCT
-    product_name, product_category, product_weight,
-    product_color, product_size, product_brand,
-    product_material, product_description,
-    product_rating, product_reviews,
-    product_release_date, product_expiry_date,
-    product_price
-FROM pet_sales;
+    product_title, product_type, product_mass, product_shade,
+    product_dim, product_maker, product_fabric, product_info,
+    product_score, product_comments, product_launch,
+    product_expire, product_cost
+FROM pet_sales_raw;
 
+-- Загрузка уникальных поставщиков
 INSERT INTO dim_supplier (
-    name, contact, email, phone, address, city, country
+    vendor_name, vendor_contact, vendor_email,
+    vendor_phone, vendor_address, vendor_city, vendor_country
 )
 SELECT DISTINCT
-    supplier_name, supplier_contact, supplier_email,
-    supplier_phone, supplier_address,
-    supplier_city, supplier_country
-FROM pet_sales;
+    supplier_title, supplier_contact_person, supplier_mail,
+    supplier_tel, supplier_addr, supplier_town, supplier_nation
+FROM pet_sales_raw;
 
+-- Загрузка фактов продаж
 INSERT INTO sales_fact (
     customer_id,
     seller_id,
     store_id,
     product_id,
     supplier_id,
-    sale_date,
-    quantity,
-    total_price
+    transaction_date,
+    items_sold,
+    transaction_total
 )
 SELECT
     dc.customer_id,
@@ -63,24 +69,24 @@ SELECT
     dst.store_id,
     dp.product_id,
     dsu.supplier_id,
-    ps.sale_date,
-    ps.sale_quantity,
-    ps.sale_total_price
-FROM pet_sales ps
+    raw.sale_dt,
+    raw.items_amount,
+    raw.total_cost
+FROM pet_sales_raw raw
 JOIN dim_customer dc ON
-    TRIM(ps.customer_first_name) = TRIM(dc.first_name) AND
-    TRIM(ps.customer_last_name) = TRIM(dc.last_name) AND
-    TRIM(ps.customer_email) = TRIM(dc.email)
+    TRIM(raw.buyer_fname) = TRIM(dc.cust_fname) AND
+    TRIM(raw.buyer_lname) = TRIM(dc.cust_lname) AND
+    TRIM(raw.buyer_email) = TRIM(dc.cust_email)
 JOIN dim_seller ds ON
-    TRIM(ps.seller_first_name) = TRIM(ds.first_name) AND
-    TRIM(ps.seller_last_name) = TRIM(ds.last_name) AND
-    TRIM(ps.seller_email) = TRIM(ds.email)
+    TRIM(raw.seller_fname) = TRIM(ds.agent_fname) AND
+    TRIM(raw.seller_lname) = TRIM(ds.agent_lname) AND
+    TRIM(raw.seller_email) = TRIM(ds.agent_email)
 JOIN dim_store dst ON
-    TRIM(ps.store_name) = TRIM(dst.name) AND
-    TRIM(ps.store_email) = TRIM(dst.email)
+    TRIM(raw.store_title) = TRIM(dst.shop_name) AND
+    TRIM(raw.store_mail) = TRIM(dst.shop_email)
 JOIN dim_product dp ON
-    TRIM(ps.product_name) = TRIM(dp.name) AND
-    ROUND(ps.product_price::NUMERIC, 2) = ROUND(dp.price::NUMERIC, 2)
+    TRIM(raw.product_title) = TRIM(dp.item_name) AND
+    ROUND(raw.product_cost::NUMERIC, 2) = ROUND(dp.item_price::NUMERIC, 2)
 JOIN dim_supplier dsu ON
-    TRIM(ps.supplier_name) = TRIM(dsu.name) AND
-    TRIM(ps.supplier_email) = TRIM(dsu.email);
+    TRIM(raw.supplier_title) = TRIM(dsu.vendor_name) AND
+    TRIM(raw.supplier_mail) = TRIM(dsu.vendor_email);
